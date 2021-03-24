@@ -28,10 +28,13 @@ to setup-social-network ;; reference to virus on a network model, netlogo
     set color cyan
     set has_shared? false
     set has_viewed? false
-    set fun-index 40 + random-float 60.0  ;; higher fun index is generally common
-    set romantic-index random-float 100.0
-    set thrill-index random-float 100.0
-    ;;set enthusiasm random-float 100.0
+    set fun-index random-normal 0.6 0.1
+    if (fun-index < 0.3 ) [set fun-index 0.3 ];; higher fun index is generally common
+    set romantic-index random-normal 0.6 0.1
+    if (romantic-index < 0 ) [set romantic-index 0 ]
+    set thrill-index random-normal 0.6 0.1
+    if (thrill-index < 0)  [set thrill-index 0]
+    ;;set enthusiasm random-float 1
     set no-of-times-viewed 0
   ]
   let number-of-links (average-node-degree * number-of-users) / 2
@@ -47,10 +50,6 @@ to setup-social-network ;; reference to virus on a network model, netlogo
   ]
 end
 
-to release-video
-
-end
-
 to view
   if ( not has_shared? and no-of-times-viewed > 0 ) [set color red]
   if( no-of-times-viewed = 0 )[ set color white]
@@ -64,15 +63,15 @@ to decide-to-share-or-not
   let curr-fun 0
   let curr-romance 0
   let curr-thrill 0
-  ifelse(video-funny-index > fun-index )[ set curr-fun ( video-funny-index - fun-index ) ] [set curr-fun fun-index / 5 ]
-  ifelse (video-romantic-index > romantic-index ) [set curr-romance (video-romantic-index - romantic-index)] [ set curr-romance romantic-index / 5]
-  ifelse (video-thrill-index > thrill-index ) [set curr-thrill (video-thrill-index - thrill-index)] [set curr-thrill thrill-index / 5 ]
+  ifelse(video-funny-index / 100 > fun-index )[ set curr-fun ( video-funny-index - 100 * fun-index ) * fun-index  ] [set curr-fun fun-index ]
+  ifelse (video-romantic-index / 100 > romantic-index ) [set curr-romance (video-romantic-index - 100 * romantic-index) * romantic-index  ] [ set curr-romance romantic-index ]
+  ifelse (video-thrill-index / 100 > thrill-index ) [set curr-thrill (video-thrill-index - 100 * thrill-index) * thrill-index ] [set curr-thrill thrill-index ]
 
   ;;The more often you see something will decide how much you value it as well. However this value will probably diminish slightly each time
-  ifelse (no-of-times-viewed  = 1) [set enthusiasm-index (0.02 * video-inspiration-index + 0.04 * curr-fun + 0.03 * curr-romance + 0.03 * curr-thrill )]
-  [ if(enthusiasm-index > 1) [set enthusiasm-index ( enthusiasm-index + ( 2 * enthusiasm-index / (1 + no-of-times-viewed) + enthusiasm-index / (1 + no-of-times-viewed) ^ 2 ) ) ] ]
-
-  if (enthusiasm-index > 2.5) [share]
+  ifelse (no-of-times-viewed  = 1) [set enthusiasm-index (0.1 * video-inspiration-index / 10 + 0.4 * curr-fun + 0.3 * curr-romance + 0.2 * curr-thrill )]
+  [ if(enthusiasm-index > 2 and enthusiasm-index < 8) [set enthusiasm-index ( enthusiasm-index + 2 * ( enthusiasm-index / (1 + no-of-times-viewed) + (enthusiasm-index / (1 + no-of-times-viewed) ^ 2 ) ) ) ] ]
+  ;;show enthusiasm-index
+  if (enthusiasm-index >= 8) [ share]
 
 end
 
@@ -86,23 +85,23 @@ end
 
 
 to go
-  ask turtles with [color != blue] [
+  ask turtles  [
     if (has_viewed?) [
       ifelse( size = 3) [share] [decide-to-share-or-not]
     ]
   ]
 
-  ifelse ( video-romantic-index + video-funny-index + video-thrill-index + video-inspiration-index  > 250 ) [tick-advance 5] [tick-advance 7]
+  ifelse ( video-romantic-index + video-funny-index + video-thrill-index + video-inspiration-index  > 200 ) [tick-advance 5] [tick-advance 7]
   if (ticks < 1200 and random_spread? and random-float 1.0 < random-spread-probability) [ ask one-of turtles [view]]
 
   tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-385
-10
-1065
-691
+846
+69
+1526
+750
 -1
 -1
 11.02
@@ -134,7 +133,7 @@ number-of-users
 number-of-users
 100
 1500
-501.0
+500.0
 1
 1
 NIL
@@ -159,7 +158,7 @@ average-node-degree
 average-node-degree
 1
 10
-4.0
+6.0
 1
 1
 NIL
@@ -183,10 +182,10 @@ NIL
 1
 
 MONITOR
-297
-305
-355
-350
+424
+359
+482
+404
 avg deg
 2 * count links / number-of-users
 17
@@ -204,108 +203,91 @@ MEME PARAMETERS
 1
 
 TEXTBOX
-16
-450
-166
-468
+13
+515
+163
+533
 VIDEO PARAMETERS
 14
 0.0
 1
 
 SLIDER
-15
-488
-187
-521
+12
+553
+184
+586
 video-romantic-index
 video-romantic-index
 0
 100
-100.0
+78.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-16
-528
-188
-561
+13
+593
+185
+626
 video-funny-index
 video-funny-index
 0
 100
-100.0
+59.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-568
-187
-601
+12
+633
+184
+666
 video-thrill-index
 video-thrill-index
 0
 100
-46.0
+68.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-15
-609
-187
-642
+12
+674
+184
+707
 video-inspiration-index
 video-inspiration-index
 -100
 100
--44.0
+-41.0
 1
 1
 NIL
 HORIZONTAL
 
-BUTTON
-235
-541
-340
-574
-release video
-release-video
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SWITCH
-223
+261
 54
-332
+370
 87
 celebrity?
 celebrity?
-0
+1
 1
 -1000
 
 TEXTBOX
-10
-665
-209
-699
+7
+730
+206
+764
 ADVERTISEMENT PARAMETERS
 14
 0.0
@@ -329,10 +311,10 @@ NIL
 1
 
 SWITCH
-218
-213
-366
-246
+225
+174
+373
+207
 random_spread?
 random_spread?
 0
@@ -341,54 +323,54 @@ random_spread?
 
 SLIDER
 216
-260
+218
 372
-293
+251
 random-spread-probability
 random-spread-probability
 0
 1
-0.7
+0.4
 0.1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-222
-98
-357
-131
+235
+95
+370
+128
 no-of-celebrities
 no-of-celebrities
 0
 3
-3.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-223
-151
-361
-184
+234
+135
+372
+168
 celebrity-influence
 celebrity-influence
 0
 15
-13.0
+10.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-1082
-76
-1469
-325
+422
+68
+809
+317
 plot 1
 NIL
 NIL
@@ -403,7 +385,114 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot (count turtles with [has_viewed?]) / number-of-users * 100"
 "pen-1" 1.0 0 -2064490 true "" "plot (count turtles with [has_shared?]) / number-of-users * 100"
 
+TEXTBOX
+73
+20
+338
+54
+USER NETWORK PARAMETERS
+14
+0.0
+1
+
+TEXTBOX
+441
+22
+702
+56
+RESULTS AND OBSERVATIONAL PLOTS
+14
+0.0
+1
+
+TEXTBOX
+1012
+21
+1115
+39
+SIMULATION 
+14
+0.0
+1
+
+SLIDER
+16
+331
+188
+364
+individual-fitness
+individual-fitness
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+371
+188
+404
+reliablity-of-predictions
+reliablity-of-predictions
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+15
+411
+187
+444
+learnability
+learnability
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+15
+450
+188
+483
+ease-of-communication
+ease-of-communication
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
+
+meme params
+contribution to individual fitness
+a fit meme should help its carrier to survive and reproduce. that means the meme should not induce behaviors that are useless (wasting resources) or dangerous.
+ 
+reliability of predictions
+useful behaviors imply correct anticipations of the effect of actions. memes producing predictions that turn out to be wrong will tend to be eliminated.
+ 
+learnability
+a meme should be easily assimilated to the cognitive system. this implies that it should not be too complex, and should not too directly contradict already established rules (coherency), which may be genetic or memetic of origin. in particular it means that rules that are consonant with genetic injunctions will be much easier to learn.
+ 
+ease of communication
+memes that are easily transmitted to another individual, either because they lead to a salient behavior that is easy to imitate, or can be clearly expressed in language or other media, will have a higher fitness.
+
+
+
+
 ## WHAT IS IT?
 
 (a general understanding of what the model is trying to show or explain)
@@ -437,6 +526,12 @@ PENS
 (models in the NetLogo Models Library and elsewhere which are of related interest)
 
 ## CREDITS AND REFERENCES
+
+- https://www.nature.com/articles/srep00335
+- https://igw.tuwien.ac.at/tom/meme/fitness-criteria-1.html
+- https://madisonicole.medium.com/meme-ology-studying-patterns-in-viral-media-f1931b3d1c7e
+- http://pespmc1.vub.ac.be/Papers/MemeticsNamur.html
+
 
 (a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
 @#$#@#$#@
