@@ -1,169 +1,250 @@
 extensions [ nw ]
-turtles-own[
-  enthusiasm-index  ;; enthusiams/ excitement to watch and share content
-  has_shared?
-  romantic-index ;; to quantify the likeliness of user towards romantic content
-  thrill-index  ;; to quantify the likeliness of user towards thrill filled content
-  fun-index  ;; to quantify the likeliness of user towards funny content
-  has_viewed?
-  no-of-times-viewed
+
+globals [
+  sharing-rates
+  total-times-shared
+  video-sharing-likelihood
+  social-motivation-types
 ]
 
-;; viewd = white, viewed & shared = blue, viewed but not shared = red
+turtles-own [
+  videos-viewed
+  my-sharing-likelihood
+  number-of-times-shared
+  is_recommending?
+  previous-recommender
+]
+
+links-own[ connection-strength ]
+
+patches-own [
+  video-type
+  video-id
+  shared-by
+  number-of-times-viewed
+  motivation-index
+]
 
 to setup
   clear-all
-  resize-world -30 30 -30 30
-  setup-social-network
-;  if( celebrity?) [ ask n-of no-of-celebrities turtles [ set size 3 set color pink] ]
-  ;initialize-variables
-  ;; homophily
-  ;; advertisment
+  set-parameters
+  create-content
+  create-network
   reset-ticks
 end
 
-to setup-social-network ;; reference to virus on a network model, netlogo
-  nw:generate-preferential-attachment turtles links number-of-users average-node-degree [
-    setxy (random-xcor * 0.9) (random-ycor * 0.9) ; for visual reasons, we don't put any nodes *too* close to the edges
-    set shape "person"
-    set color cyan
-    set has_shared? false
-    set has_viewed? false
-    set fun-index random-normal 0.6 0.1
-    if (fun-index < 0.3 ) [set fun-index 0.3 ];; higher fun index is generally common
-    set romantic-index random-normal 0.6 0.1
-    if (romantic-index < 0 ) [set romantic-index 0 ]
-    set thrill-index random-normal 0.6 0.1
-    if (thrill-index < 0)  [set thrill-index 0]
-    ;;set enthusiasm random-float 1
-    set no-of-times-viewed 0
+to set-parameters
+   set total-times-shared 1
+   set sharing-rates [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+   set video-sharing-likelihood [42.3 38.8 31.7 29.5 28.8 28.4 28.1 26.7 23.8 20.0 19.7 15.6 15.3 14.0 12.8 9.8]
+   set social-motivation-types ["shared-passion" "social-irl" "social-utility" "social-good" "zeitgeist" "kudos" "reaction-seeking" "self-expression" "shared-emotional-experience"]
+
+end
+
+to create-content
+  (foreach (sort patches ) (n-values count patches [t -> t])[ [x y] -> ask x [set video-id y] ])
+  ask patches [ create-one-video]
+  color-regions
+end
+
+to create-one-video
+  set motivation-index ( list  (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) )
+  set number-of-times-viewed 0
+  set shared-by nobody
+  divide-world
+
+end
+
+to divide-world
+if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 1 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= 8 and pycor >= 0 [ set video-type 2 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 16 and pycor >= 8 [ set video-type 3 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= 0 and pycor >= -8 [ set video-type 4 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 8 and pycor >= 0 [ set video-type 5 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= 16 and pycor >= 8 [ set video-type 6 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= -8 and pycor >= -16 [ set video-type 7 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 0 and pycor >= -8 [ set video-type 8 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= 8 and pycor >= 0 [ set video-type 9 ]
+  if pxcor <= 16 and pxcor >= 8 and pycor <= 16 and pycor >= 8 [ set video-type 10 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= -8 and pycor >= -16 [ set video-type 11 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= 0 and pycor >= -8 [ set video-type 12 ]
+  if pxcor <= 16 and pxcor >= 8 and pycor <= 8 and pycor >= 0 [ set video-type 13 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= -8 and pycor >= -16 [ set video-type 14 ]
+  if pxcor <= 16 and pxcor >= 8 and pycor <= 0 and pycor >= -8 [ set video-type 15 ]
+  if pxcor <= 16 and pxcor >= 8 and pycor <= -8 and pycor >= -16 [ set video-type 16 ]
+end
+
+to color-regions
+  ask patches [
+    set pcolor 6 + video-type * 10
+    set plabel-color pcolor + 1
+    set plabel video-type
   ]
-;  create-turtles number-of-users [
-;
-;  ]
-;  let number-of-links (average-node-degree * number-of-users) / 2
-;  while [count links < number-of-links ][
-;    ask one-of turtles [
-;      let choice (min-one-of (other turtles with [not link-neighbor? myself]) [distance myself])
-;      if choice != nobody [ create-link-with choice ]
-;    ]
-;  ]
-;  ; make the network look a little prettier
-  repeat 40[
-    layout-spring turtles links 0.1 (world-width / (sqrt number-of-users)) 1
+end
+
+to create-network
+  if network-type = "random" [  nw:generate-random turtles links number-of-users 0.1 ]
+  if network-type = "preferential" [ nw:generate-preferential-attachment turtles links number-of-users 1 ]
+  if network-type = "small-world" [ let sq sqrt number-of-users nw:generate-small-world turtles links sq sq 2.0 false ]
+  setup-links
+  ask turtles [
+    set shape "person"
+    set color cyan + 3
+    setxy random-xcor random-ycor
+    set videos-viewed []
+    set my-sharing-likelihood random 100 / 100
+    set previous-recommender nobody
+    set is_recommending? false
+  ]
+end
+
+
+to setup-links ;link procedure
+  ask links [
+    set connection-strength 1
+    set label connection-strength
+  ]
+end
+
+to go
+  ask turtles  [
+    view
+    see-new-video
+  ]
+  if( ticks != 0 and ticks mod deletion-rate = 0 ) [
+    decide-to-delete
+  ]
+
+  tick
+end
+
+to decide-to-delete
+
+  let to-delete []
+  ask patches [
+    if random-float 1 < deletion-probabilty [
+      set to-delete lput video-id to-delete
+      create-one-video
+    ]
+  ]
+  foreach to-delete [
+      t ->
+      ask turtles [
+        if member? t videos-viewed [
+          set videos-viewed remove t videos-viewed
+        ]
+      ]
+    ]
+end
+
+to see-new-video
+  let people-recommending my-links with  [[ is_recommending?] of other-end]
+  if( any? people-recommending) [
+    set previous-recommender [other-end] of max-one-of people-recommending [connection-strength]
+    move-to [patch-here] of previous-recommender
   ]
 end
 
 to view
-  if ( not has_shared? and no-of-times-viewed > 0 ) [set color red]
-  if( no-of-times-viewed = 0 )[ set color white]
-  set has_viewed? true
-  set no-of-times-viewed no-of-times-viewed + 1
+  set is_recommending? false
+  let current-patch patch-here
+  let current-video [video-id] of current-patch
+  ifelse random-float 1 < 0.5 and member? current-video videos-viewed[
+    rt random 360
+    fd 1
 
+  ]
+  [
+    set videos-viewed lput current-video videos-viewed
+
+    ask current-patch [
+      set number-of-times-viewed number-of-times-viewed + 1
+    ]
+
+    decide-to-share-or-not
+
+  ]
 end
 
 to decide-to-share-or-not
-  ;; need to find the net of all the parameters
-  let curr-fun 0
-  let curr-romance 0
-  let curr-thrill 0
-  ifelse(video-funny-index / 100 > fun-index )[ set curr-fun ( video-funny-index - 100 * fun-index ) * fun-index  ] [set curr-fun fun-index ]
-  ifelse (video-romantic-index / 100 > romantic-index ) [set curr-romance (video-romantic-index - 100 * romantic-index) * romantic-index  ] [ set curr-romance romantic-index ]
-  ifelse (video-thrill-index / 100 > thrill-index ) [set curr-thrill (video-thrill-index - 100 * thrill-index) * thrill-index ] [set curr-thrill thrill-index ]
+  let current-patch patch-here
+  let current-video-sharing-likelihood ( item (video-type - 1) video-sharing-likelihood ) / 100
+  let motivation-to-share [mean motivation-index] of current-patch / 5
 
-  ;;The more often you see something will decide how much you value it as well. However this value will probably diminish slightly each time
-  ifelse (no-of-times-viewed  = 1) [set enthusiasm-index (0.1 * video-inspiration-index / 10 + 0.4 * curr-fun + 0.3 * curr-romance + 0.2 * curr-thrill )]
-  [ if(enthusiasm-index > 2 and enthusiasm-index < 8) [set enthusiasm-index ( enthusiasm-index + 2 * ( enthusiasm-index / (1 + no-of-times-viewed) + (enthusiasm-index / (1 + no-of-times-viewed) ^ 2 ) ) ) ] ]
-  ;;show enthusiasm-index
-  if (enthusiasm-index >= 8) [ share]
+  if my-sharing-likelihood * current-video-sharing-likelihood * motivation-to-share > random-float 1 [
+    set shared-by self
+    set is_recommending? true
+    set total-times-shared total-times-shared + 1
+    set number-of-times-shared number-of-times-shared + 1
+    set sharing-rates replace-item (video-type - 1) sharing-rates ( item  (video-type - 1) sharing-rates + 1)
 
-end
-
-to share
-  set color blue
-  set has_shared? true
-  ask link-neighbors [view]
-;
-
-end
-
-
-to go
-  ask turtles  [
-    if (has_viewed?) [
-      ifelse( size = 3) [share] [decide-to-share-or-not]
+    if (previous-recommender != nobody ) [
+      ask link-with previous-recommender [
+        set connection-strength connection-strength + 1
+        set label connection-strength
+      ]
     ]
   ]
-
-  ifelse ( video-romantic-index + video-funny-index + video-thrill-index + video-inspiration-index  > 200 ) [tick-advance 5] [tick-advance 7]
-  if (ticks < 1200 and random-float 1.0 < 0.4) [ ask one-of turtles [view]]
-
-  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-863
-61
-1363
-562
+305
+13
+855
+564
 -1
 -1
-8.07
+16.42424242424243
 1
 10
 1
 1
 1
 0
+0
+0
 1
-1
-1
--30
-30
--30
-30
-1
-1
+-16
+16
+-16
+16
+0
+0
 1
 ticks
 30.0
 
 SLIDER
-12
+16
 56
-184
+188
 89
 number-of-users
 number-of-users
 100
-1500
-500.0
+1000
+250.0
 1
 1
 NIL
 HORIZONTAL
 
-SLIDER
-11
+CHOOSER
+16
 96
-183
-129
-average-node-degree
-average-node-degree
-1
-10
-2.0
-1
-1
-NIL
-HORIZONTAL
+154
+141
+network-type
+network-type
+"preferential" "small-world" "random"
+0
 
 BUTTON
-23
-164
-86
-197
-setup
+20
+331
+83
+364
+NIL
 setup
 NIL
 1
@@ -175,93 +256,42 @@ NIL
 NIL
 1
 
-MONITOR
-424
-359
-482
-404
-avg deg
-2 * count links / number-of-users
-17
-1
-11
-
-TEXTBOX
-21
-216
-171
-234
-VIDEO PARAMETERS
-14
-0.0
-1
-
 SLIDER
-20
-254
-192
-287
-video-romantic-index
-video-romantic-index
-0
-100
-58.0
+15
+155
+187
+188
+deletion-rate
+deletion-rate
+50
+500
+300.0
 1
 1
-NIL
+ticks
 HORIZONTAL
 
 SLIDER
-21
-294
-189
-327
-video-funny-index
-video-funny-index
+12
+196
+184
+229
+deletion-probabilty
+deletion-probabilty
 0
-100
-69.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-17
-337
-189
-370
-video-thrill-index
-video-thrill-index
-0
-100
-39.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-17
-378
-189
-411
-video-inspiration-index
-video-inspiration-index
--100
-100
--41.0
-1
+0.2
+0.05
+0.01
 1
 NIL
 HORIZONTAL
 
 BUTTON
-100
-165
-155
-198
-go
+101
+332
+164
+365
+NIL
 go
 T
 1
@@ -274,117 +304,44 @@ NIL
 1
 
 PLOT
-422
-68
-809
-317
-plot 1
-NIL
-NIL
+937
+40
+1314
+293
+Number of views ( different video types )
+Video Type 
+Number of views 
+1.0
+16.0
 0.0
-200.0
-0.0
-100.0
+1000.0
 true
 false
-"" ""
+"" "clear-plot"
 PENS
-"default" 1.0 0 -16777216 true "" "plot (count turtles with [has_viewed?]) / number-of-users * 100"
-"pen-1" 1.0 0 -2064490 true "" "plot (count turtles with [has_shared?]) / number-of-users * 100"
-
-TEXTBOX
-73
-20
-338
-54
-USER NETWORK PARAMETERS
-14
-0.0
-1
-
-TEXTBOX
-441
-22
-702
-56
-RESULTS AND OBSERVATIONAL PLOTS
-14
-0.0
-1
-
-TEXTBOX
-1012
-21
-1115
-39
-SIMULATION 
-14
-0.0
-1
+"default" 1.0 1 -16777216 true "" "foreach n-values 16 [ x -> x + 1] [ x -> plotxy x mean [number-of-times-viewed] of patches with [video-type = x] ]"
 
 @#$#@#$#@
-meme params
-contribution to individual fitness
-a fit meme should help its carrier to survive and reproduce. that means the meme should not induce behaviors that are useless (wasting resources) or dangerous.
- 
-reliability of predictions
-useful behaviors imply correct anticipations of the effect of actions. memes producing predictions that turn out to be wrong will tend to be eliminated.
- 
-learnability
-a meme should be easily assimilated to the cognitive system. this implies that it should not be too complex, and should not too directly contradict already established rules (coherency), which may be genetic or memetic of origin. in particular it means that rules that are consonant with genetic injunctions will be much easier to learn.
- 
-ease of communication
-memes that are easily transmitted to another individual, either because they lead to a salient behavior that is easy to imitate, or can be clearly expressed in language or other media, will have a higher fitness.
+Opinion seeking
+Shared passion
+Social in real life
+Social Utility
+Kudos: Coolhunter 
+Kudos: Authority
+Zeitgeist 
+Conversation starting
+Self-Expression
+Social good
+
+https://melmarketingtips.com/blog/hello-world/
+
+building-a-social-video-strategy-wistiafest-2015
 
 
-
-
-## WHAT IS IT?
-
-(a general understanding of what the model is trying to show or explain)
-
-## HOW IT WORKS
-
-(what rules the agents use to create the overall behavior of the model)
-
-## HOW TO USE IT
-
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-- https://www.nature.com/articles/srep00335
-- https://igw.tuwien.ac.at/tom/meme/fitness-criteria-1.html
-- https://madisonicole.medium.com/meme-ology-studying-patterns-in-viral-media-f1931b3d1c7e
-- http://pespmc1.vub.ac.be/Papers/MemeticsNamur.html
-
-
-- https://www.tandfonline.com/doi/abs/10.1080/23754931.2019.1619193
-- http://www2015.thewebconf.org/documents/proceedings/companion/p811.pdf
-- https://ieeexplore.ieee.org/document/6103772
-
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+model references: 
+virus on a network
+for division 
+many regions
 @#$#@#$#@
 default
 true

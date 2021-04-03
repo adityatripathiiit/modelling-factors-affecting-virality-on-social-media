@@ -9,7 +9,6 @@ turtles-own[
 ]
 
 ;; viewd = white, viewed & shared = blue, viewed but not shared = red
-
 to setup
   clear-all
   resize-world -30 30 -30 30
@@ -67,7 +66,6 @@ to decide-to-share-or-not
   ifelse (video-romantic-index / 100 > romantic-index ) [set curr-romance (video-romantic-index - 100 * romantic-index) * romantic-index  ] [ set curr-romance romantic-index ]
   ifelse (video-thrill-index / 100 > thrill-index ) [set curr-thrill (video-thrill-index - 100 * thrill-index) * thrill-index ] [set curr-thrill thrill-index ]
 
-  ;;The more often you see something will decide how much you value it as well. However this value will probably diminish slightly each time
   ifelse (no-of-times-viewed  = 1) [set enthusiasm-index (0.1 * video-inspiration-index / 10 + 0.4 * curr-fun + 0.3 * curr-romance + 0.2 * curr-thrill )]
   [ if(enthusiasm-index > 2 and enthusiasm-index < 8) [set enthusiasm-index ( enthusiasm-index + 2 * ( enthusiasm-index / (1 + no-of-times-viewed) + (enthusiasm-index / (1 + no-of-times-viewed) ^ 2 ) ) ) ] ]
   ;;show enthusiasm-index
@@ -82,7 +80,6 @@ to share
   [ask turtles in-radius celebrity-influence [view]]
 
 end
-
 
 to go
   ask turtles  [
@@ -203,70 +200,70 @@ MEME PARAMETERS
 1
 
 TEXTBOX
-13
-515
-163
-533
+17
+359
+167
+377
 VIDEO PARAMETERS
 14
 0.0
 1
 
 SLIDER
-12
-553
-184
-586
+16
+397
+188
+430
 video-romantic-index
 video-romantic-index
 0
 100
-78.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-13
-593
-185
-626
+17
+437
+189
+470
 video-funny-index
 video-funny-index
 0
 100
-59.0
+74.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-12
-633
-184
-666
+16
+477
+188
+510
 video-thrill-index
 video-thrill-index
 0
 100
-68.0
+0.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-12
-674
-184
-707
+16
+518
+188
+551
 video-inspiration-index
 video-inspiration-index
 -100
 100
--41.0
+63.0
 1
 1
 NIL
@@ -284,10 +281,10 @@ celebrity?
 -1000
 
 TEXTBOX
-7
-730
-206
-764
+11
+574
+210
+608
 ADVERTISEMENT PARAMETERS
 14
 0.0
@@ -415,68 +412,7 @@ SIMULATION
 0.0
 1
 
-SLIDER
-16
-331
-188
-364
-individual-fitness
-individual-fitness
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-16
-371
-188
-404
-reliablity-of-predictions
-reliablity-of-predictions
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-15
-411
-187
-444
-learnability
-learnability
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-15
-450
-188
-483
-ease-of-communication
-ease-of-communication
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
-
 @#$#@#$#@
-
 meme params
 contribution to individual fitness
 a fit meme should help its carrier to survive and reproduce. that means the meme should not induce behaviors that are useless (wasting resources) or dangerous.

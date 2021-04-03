@@ -1,4 +1,3 @@
-extensions [ nw ]
 turtles-own[
   enthusiasm-index  ;; enthusiams/ excitement to watch and share content
   has_shared?
@@ -15,7 +14,7 @@ to setup
   clear-all
   resize-world -30 30 -30 30
   setup-social-network
-;  if( celebrity?) [ ask n-of no-of-celebrities turtles [ set size 3 set color pink] ]
+  if( celebrity?) [ ask n-of no-of-celebrities turtles [ set size 3 set color pink] ]
   ;initialize-variables
   ;; homophily
   ;; advertisment
@@ -23,7 +22,7 @@ to setup
 end
 
 to setup-social-network ;; reference to virus on a network model, netlogo
-  nw:generate-preferential-attachment turtles links number-of-users average-node-degree [
+  create-turtles number-of-users [
     setxy (random-xcor * 0.9) (random-ycor * 0.9) ; for visual reasons, we don't put any nodes *too* close to the edges
     set shape "person"
     set color cyan
@@ -38,19 +37,16 @@ to setup-social-network ;; reference to virus on a network model, netlogo
     ;;set enthusiasm random-float 1
     set no-of-times-viewed 0
   ]
-;  create-turtles number-of-users [
-;
-;  ]
-;  let number-of-links (average-node-degree * number-of-users) / 2
-;  while [count links < number-of-links ][
-;    ask one-of turtles [
-;      let choice (min-one-of (other turtles with [not link-neighbor? myself]) [distance myself])
-;      if choice != nobody [ create-link-with choice ]
-;    ]
-;  ]
-;  ; make the network look a little prettier
+  let number-of-links (average-node-degree * number-of-users) / 2
+  while [count links < number-of-links ][
+    ask one-of turtles [
+      let choice (min-one-of (other turtles with [not link-neighbor? myself]) [distance myself])
+      if choice != nobody [ create-link-with choice ]
+    ]
+  ]
+  ; make the network look a little prettier
   repeat 40[
-    layout-spring turtles links 0.1 (world-width / (sqrt number-of-users)) 1
+    layout-spring turtles links 0.3 (world-width / (sqrt number-of-users)) 1
   ]
 end
 
@@ -82,8 +78,8 @@ end
 to share
   set color blue
   set has_shared? true
-  ask link-neighbors [view]
-;
+  ifelse size < 3 [ask link-neighbors [view]]
+  [ask turtles in-radius celebrity-influence [view]]
 
 end
 
@@ -96,19 +92,19 @@ to go
   ]
 
   ifelse ( video-romantic-index + video-funny-index + video-thrill-index + video-inspiration-index  > 200 ) [tick-advance 5] [tick-advance 7]
-  if (ticks < 1200 and random-float 1.0 < 0.4) [ ask one-of turtles [view]]
+  if (ticks < 1200 and random_spread? and random-float 1.0 < random-spread-probability) [ ask one-of turtles [view]]
 
   tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-863
-61
-1363
-562
+846
+69
+1526
+750
 -1
 -1
-8.07
+11.02
 1
 10
 1
@@ -143,26 +139,36 @@ number-of-users
 NIL
 HORIZONTAL
 
+CHOOSER
+12
+98
+150
+143
+content-type
+content-type
+"memes" "videos" "photos" "news"
+1
+
 SLIDER
-11
-96
-183
-129
+10
+154
+182
+187
 average-node-degree
 average-node-degree
 1
 10
-2.0
+6.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-23
-164
-86
-197
+15
+251
+78
+284
 setup
 setup
 NIL
@@ -187,65 +193,75 @@ avg deg
 11
 
 TEXTBOX
-21
-216
-171
-234
+20
+300
+170
+318
+MEME PARAMETERS 
+14
+0.0
+1
+
+TEXTBOX
+13
+515
+163
+533
 VIDEO PARAMETERS
 14
 0.0
 1
 
 SLIDER
-20
-254
-192
-287
+12
+553
+184
+586
 video-romantic-index
 video-romantic-index
 0
 100
-58.0
+78.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-21
-294
-189
-327
+13
+593
+185
+626
 video-funny-index
 video-funny-index
 0
 100
-69.0
+59.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-17
-337
-189
-370
+12
+633
+184
+666
 video-thrill-index
 video-thrill-index
 0
 100
-39.0
+68.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-17
-378
-189
-411
+12
+674
+184
+707
 video-inspiration-index
 video-inspiration-index
 -100
@@ -256,11 +272,32 @@ video-inspiration-index
 NIL
 HORIZONTAL
 
+SWITCH
+261
+54
+370
+87
+celebrity?
+celebrity?
+1
+1
+-1000
+
+TEXTBOX
+7
+730
+206
+764
+ADVERTISEMENT PARAMETERS
+14
+0.0
+1
+
 BUTTON
-100
-165
-155
-198
+92
+252
+147
+285
 go
 go
 T
@@ -272,6 +309,62 @@ NIL
 NIL
 NIL
 1
+
+SWITCH
+225
+174
+373
+207
+random_spread?
+random_spread?
+0
+1
+-1000
+
+SLIDER
+216
+218
+372
+251
+random-spread-probability
+random-spread-probability
+0
+1
+0.4
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+235
+95
+370
+128
+no-of-celebrities
+no-of-celebrities
+0
+3
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+234
+135
+372
+168
+celebrity-influence
+celebrity-influence
+0
+15
+10.0
+1
+1
+NIL
+HORIZONTAL
 
 PLOT
 422
@@ -322,7 +415,68 @@ SIMULATION
 0.0
 1
 
+SLIDER
+16
+331
+188
+364
+individual-fitness
+individual-fitness
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+371
+188
+404
+reliablity-of-predictions
+reliablity-of-predictions
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+15
+411
+187
+444
+learnability
+learnability
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+15
+450
+188
+483
+ease-of-communication
+ease-of-communication
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
+
 meme params
 contribution to individual fitness
 a fit meme should help its carrier to survive and reproduce. that means the meme should not induce behaviors that are useless (wasting resources) or dangerous.
@@ -377,11 +531,6 @@ memes that are easily transmitted to another individual, either because they lea
 - https://igw.tuwien.ac.at/tom/meme/fitness-criteria-1.html
 - https://madisonicole.medium.com/meme-ology-studying-patterns-in-viral-media-f1931b3d1c7e
 - http://pespmc1.vub.ac.be/Papers/MemeticsNamur.html
-
-
-- https://www.tandfonline.com/doi/abs/10.1080/23754931.2019.1619193
-- http://www2015.thewebconf.org/documents/proceedings/companion/p811.pdf
-- https://ieeexplore.ieee.org/document/6103772
 
 
 (a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
