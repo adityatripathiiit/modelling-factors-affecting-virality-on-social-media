@@ -44,7 +44,7 @@ end
 to create-content
   (foreach (sort patches ) (n-values count patches [t -> t])[ [x y] -> ask x [set video-id y] ])
   ask patches [ create-one-video]
-  color-regions
+;  color-regions
 end
 
 to create-one-video
@@ -56,20 +56,20 @@ to create-one-video
 end
 
 to divide-world
-if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 1 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 1 ]
   if pxcor <= -8 and pxcor >= -16 and pycor <= 8 and pycor >= 0 [ set video-type 2 ]
-  if pxcor <= 0 and pxcor >= -8 and pycor <= 16 and pycor >= 8 [ set video-type 3 ]
-  if pxcor <= -8 and pxcor >= -16 and pycor <= 0 and pycor >= -8 [ set video-type 4 ]
-  if pxcor <= 0 and pxcor >= -8 and pycor <= 8 and pycor >= 0 [ set video-type 5 ]
-  if pxcor <= 8 and pxcor >= 0 and pycor <= 16 and pycor >= 8 [ set video-type 6 ]
-  if pxcor <= -8 and pxcor >= -16 and pycor <= -8 and pycor >= -16 [ set video-type 7 ]
-  if pxcor <= 0 and pxcor >= -8 and pycor <= 0 and pycor >= -8 [ set video-type 8 ]
-  if pxcor <= 8 and pxcor >= 0 and pycor <= 8 and pycor >= 0 [ set video-type 9 ]
-  if pxcor <= 16 and pxcor >= 8 and pycor <= 16 and pycor >= 8 [ set video-type 10 ]
-  if pxcor <= 0 and pxcor >= -8 and pycor <= -8 and pycor >= -16 [ set video-type 11 ]
-  if pxcor <= 8 and pxcor >= 0 and pycor <= 0 and pycor >= -8 [ set video-type 12 ]
-  if pxcor <= 16 and pxcor >= 8 and pycor <= 8 and pycor >= 0 [ set video-type 13 ]
-  if pxcor <= 8 and pxcor >= 0 and pycor <= -8 and pycor >= -16 [ set video-type 14 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= 0 and pycor >= -8 [ set video-type 3 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= -8 and pycor >= -16 [ set video-type 4 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 16 and pycor >= 8 [ set video-type 5 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 8 and pycor >= 0 [ set video-type 6 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 0 and pycor >= -8 [ set video-type 7 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= -8 and pycor >= -16 [ set video-type 8 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= 16 and pycor >= 8 [ set video-type 9 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= 8 and pycor >= 0 [ set video-type 10 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= 0 and pycor >= -8 [ set video-type 11 ]
+  if pxcor <= 8 and pxcor >= 0 and pycor <= -8 and pycor >= -16 [ set video-type 12 ]
+  if pxcor <= 16 and pxcor >= 8 and pycor <= 16 and pycor >= 8 [ set video-type 13 ]
+  if pxcor <= 16 and pxcor >= 8 and pycor <= 8 and pycor >= 0 [ set video-type 14 ]
   if pxcor <= 16 and pxcor >= 8 and pycor <= 0 and pycor >= -8 [ set video-type 15 ]
   if pxcor <= 16 and pxcor >= 8 and pycor <= -8 and pycor >= -16 [ set video-type 16 ]
 end
@@ -79,9 +79,6 @@ to color-regions
     set pcolor 6 + video-type * 10
     set plabel-color pcolor + 1
     set plabel video-type
-    if(video-type = 14) [set pcolor 108 set plabel-color pcolor + 1]
-    if(video-type = 15) [set pcolor 118 set plabel-color pcolor + 1]
-    if(video-type = 16) [set pcolor 128 set plabel-color pcolor + 1]
   ]
 end
 
@@ -95,7 +92,7 @@ to create-network
     set color cyan + 3
     setxy random-xcor random-ycor
     set videos-viewed []
-    set my-sharing-likelihood random 100 / 100
+    set my-sharing-likelihood random 100
     set previous-recommender nobody
     set is_recommending? false
   ]
@@ -114,7 +111,7 @@ to go
     view
     see-new-video
   ]
-  if( ticks != 0 and ticks mod deletion-rate = 0 ) [
+  if( ticks != 0 and ticks mod 300 = 0 ) [
     decide-to-delete
   ]
 
@@ -125,7 +122,7 @@ to decide-to-delete
 
   let to-delete []
   ask patches [
-    if random-float 1 < deletion-probabilty [
+    if random-float 1 < 0.05 [
       set to-delete lput video-id to-delete
       create-one-video
     ]
@@ -174,7 +171,7 @@ to decide-to-share-or-not
   let current-video-sharing-likelihood ( item (video-type - 1) video-sharing-likelihood ) / 100
   let motivation-to-share [mean motivation-index] of current-patch / 5
 
-  if my-sharing-likelihood * current-video-sharing-likelihood * motivation-to-share > random-float 1 [
+  if my-sharing-likelihood / 100 * current-video-sharing-likelihood * motivation-to-share > random-float 1 [
     set shared-by self
     set is_recommending? true
     set total-times-shared total-times-shared + 1
@@ -259,36 +256,6 @@ NIL
 NIL
 1
 
-SLIDER
-15
-155
-187
-188
-deletion-rate
-deletion-rate
-50
-500
-300.0
-1
-1
-ticks
-HORIZONTAL
-
-SLIDER
-12
-196
-184
-229
-deletion-probabilty
-deletion-probabilty
-0
-0.2
-0.05
-0.01
-1
-NIL
-HORIZONTAL
-
 BUTTON
 101
 332
@@ -317,45 +284,12 @@ Number of views
 1.0
 16.0
 0.0
-500.0
+1000.0
 true
 false
 "" "clear-plot"
 PENS
 "default" 1.0 1 -16777216 true "" "foreach n-values 16 [ x -> x + 1] [ x -> plotxy x mean [number-of-times-viewed] of patches with [video-type = x] ]"
-
-PLOT
-930
-321
-1442
-652
-Sharing Rates (different video types)
-Time
-Sharing Rate 
-0.0
-2000.0
-0.0
-0.5
-true
-true
-"" ""
-PENS
-"Pets & Animals" 1.0 0 -2139308 true "" "plot ( item 0 sharing-rates / total-times-shared)"
-"Nonprofits & Activism" 1.0 0 -817084 true "" "plot ( item 1 sharing-rates / total-times-shared)"
-"News & Politics" 1.0 0 -5207188 true "" "plot ( item 2 sharing-rates / total-times-shared)"
-"Travel & Events " 1.0 0 -987046 true "" "plot ( item 3 sharing-rates / total-times-shared)"
-"Education" 1.0 0 -8732573 true "" "plot ( item 4 sharing-rates / total-times-shared)"
-"Science & Technology" 1.0 0 -11085214 true "" "plot ( item 5 sharing-rates / total-times-shared)"
-"Sports" 1.0 0 -14835848 true "" "plot ( item 6 sharing-rates / total-times-shared)"
-"People & Blogs" 1.0 0 -8990512 true "" "plot ( item 7 sharing-rates / total-times-shared)"
-"Autos & Vehicles" 1.0 0 -11033397 true "" "plot ( item 8 sharing-rates / total-times-shared)"
-"Comedy" 1.0 0 -10649926 true "" "plot ( item 9 sharing-rates / total-times-shared)"
-"HowTo & Style" 1.0 0 -6917194 true "" "plot ( item 10 sharing-rates / total-times-shared)"
-"Entertainment" 1.0 0 -4699768 true "" "plot ( item 11 sharing-rates / total-times-shared)"
-"Gadgets & Games" 1.0 0 -1664597 true "" "plot ( item 12 sharing-rates / total-times-shared)"
-"Film & Animation" 1.0 0 -5325092 true "" "plot ( item 13 sharing-rates / total-times-shared)"
-"Music" 1.0 0 -3425830 true "" "plot ( item 14 sharing-rates / total-times-shared)"
-"Shows" 1.0 0 -2382653 true "" "plot ( item 15 sharing-rates / total-times-shared)"
 
 @#$#@#$#@
 Opinion seeking
