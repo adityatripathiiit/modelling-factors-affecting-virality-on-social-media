@@ -55,8 +55,8 @@ to set-video-type
 if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 1 ]
   if pxcor <= -8 and pxcor >= -16 and pycor <= 8 and pycor >= 0 [ set video-type 2 ]
   if pxcor <= 0 and pxcor >= -8 and pycor <= 16 and pycor >= 8 [ set video-type 3 ]
-  if pxcor <= -8 and pxcor >= -16 and pycor <= 0 and pycor >= -8 [ set video-type 4 ]
-  if pxcor <= 0 and pxcor >= -8 and pycor <= 8 and pycor >= 0 [ set video-type 5 ]
+  if pxcor <= -8 and pxcor >= -16 and pycor <= 0 and pycor >= -8 [ set video-type 5 ]
+  if pxcor <= 0 and pxcor >= -8 and pycor <= 8 and pycor >= 0 [ set video-type 4 ]
   if pxcor <= 8 and pxcor >= 0 and pycor <= 16 and pycor >= 8 [ set video-type 6 ]
   if pxcor <= -8 and pxcor >= -16 and pycor <= -8 and pycor >= -16 [ set video-type 7 ]
   if pxcor <= 0 and pxcor >= -8 and pycor <= 0 and pycor >= -8 [ set video-type 8 ]
@@ -432,6 +432,8 @@ sum [number-of-times-viewed] of patches / total-times-shared
 @#$#@#$#@
 # Viral spread of different type of content on social media Model ODD Description
 
+The model description follows the ODD (Overview, Design concepts, Details) protocol for describing individual and agent-based models (Grimm et al. 2006; 2010; Railsback and Grimm 2018)
+
 ## 1. Purpose and patterns
 This model is designed to explore the spread of viral content on social media via the methods of diffusion of information. Using the model one can try to answer the following questions: 
 
@@ -499,6 +501,32 @@ However, if the user has already viewed the current-video (video represented by 
 
 ## 4. Design Concepts
 
+* **Basic Principles :** The model is based on the basic theory of information diffusion and virality. The users interact with each other and perform actions based on their interaction with other users as well as the environment. The purpose of this model is to study the variation of number of views depending on the type of the content and their likelihoods. 
+
+* **Emergence :** There is an emergence of the number of content views distribution and their sharing rates depending on the type of video, and the social graph. The agents or the users simply interact with their environment and with other agents or users, and the out come is the emergent behavoious of these interactions. 
+
+* **Adaptation :**  The adaptive behavious of the users is to recommend content to other users and depending on the strength/ trust of their connection watch the content recommended by other users. At each time step, a user can decide if it wants to share some content to its connections or not. Also, it trie to watch a new video which has been recommended or shared by one of his connections, or to watch a old video. 
+
+* **Objective :** The goal or objective of a user is to maximize the worth of content watched by time spent. Thus a user will always try to see a content which is recommended by some one who it trusts the most, and who has social traits similar to it. This, when there are a lot of connection users recommending content to a user, then the target user always choses the user with the highest trust value or the highest connection strength value, and thus maximizing their pleasure per unit time, by viewing content that suits him/her the most. 
+
+* **Learning :** There is no as such learning in the model, however the agents depending on their interaction with a specific agent/user, increases their connection strength, which in turn helps it to see the best content (on an individual basis) based on recommendation by its connections. 
+
+* **Prediction :** The model predicts the rate of sharing of content and average view of of different types of content. 
+ 
+* **Sensing :**  The agents are assumed to know the agent who previously recommnended the conent it is watching, without error. Also, all the agents are assumed to know the connections strengths between their link neighbors without error . 
+
+* **Interaction :**  Agents interact with the patches, and they can share the content at the current patch, and they can view the content at the current patch location. Also, the patches interact with themselves, where they can increase the connection strength between their link neighbors upon watching a recommended content by some link neighbor. 
+
+* **Stochasticity :** The user social graph setup initally can also be chosen to be a random graph, which is set up stocastically. The setting up of a content's social parameters are set up randomly and thus are stocastic. The deletion of videos on every fixed interval of time is also stocastically done. After deletion, new videos are created to fill the place of the removed video. The social parameters for the videos are again set stocastically. 
+The user agents are placed randomly on the world, and their sharing likelihood is choosen stocastically. The method to watch the video also has randomness in it as explained in section 3, and also the movement of turtles is done randomly. 
+Thus the stocasticity is used to share and recommend the content to other link neighbors and define the view and sharing patterns in this model. 
+
+* **Collectives :** There are no collectives in the model
+
+* **Observation :** The Number of views plot shows the mean views of all the patches having the same content type. When a user watches any content this plot is updated. Similarly the total views vs total shares gives a plot between time and the total views and shares. 
+The sharing rates line chart gives the sharing rates of different type of content vs time. Once a user shares a content, the sharing rates change. 
+
+
 ## 5. Initialization
 
 Firstly a network is setup depending on the type of network selected and the links are setup. The connection-strength of each link is initialized to 1. 
@@ -525,6 +553,12 @@ Initialization is always the same, except the likelyhoods that are begin initial
 The model has no input data.
 
 ## 7. Submodels
+
+*  **View Submodel :** The view submodel defines exactly how the users will watch a content and the sharing patterns of a user. The user will move to a new video patch randomly if it has already watched the content. All other actions are fully described in the section 3 above. 
+
+* **Watch new video submodel :** The watch new video submodel is actually the part where sharing of the content occurs. This is the place, where a user will look for its most trusted connection/friend out of all those connections who are willing to share any content. And to watch the content shared to him/her, it has to move to the location of the video-patch shared to it. This step counts as the content being shared, and the sharing count of the content is increased. All other actions are fully described in the section 3 above. 
+
+* **Decide to delete :** The decide to delete submodel will basically remove some content from the world regualarly on certain intervals of time. The removal of content is completely a random choice, with probability defined in the slider. After removal new content need to take place of the removed content. All other actions are fully described in the section 3 above. 
 
 ## CREDITS AND REFERENCES
 
