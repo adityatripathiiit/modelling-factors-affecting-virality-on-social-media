@@ -1,58 +1,59 @@
 extensions [ nw ]
-
+;; The global parameters
 globals [
-  sharing-rates
-  total-times-shared
-  video-sharing-likelihood
-  social-motivation-types
+  sharing-rates            ;; sharing rates is a list storing the sharing rates of the 16 types of videos
+  total-times-shared       ;; number keeping track of the total number of time a content is shared
+  video-sharing-likelihood ;; set to [42.3 38.8 31.7 29.5 28.8 28.4 28.1 26.7 23.8 20.0 19.7 15.6 15.3 14.0 12.8 9.8] depending on the Butox paper, for the 16 video
+  social-motivation-types  ;; set to [“opinion-seeking” “shared-passion” “social-utility” “kudos” “zeitgeist” “social-good” “reaction-seeking” “self-expression” “emotional-experience”] depending on research of Phil Nottingham.
 ]
-
+;; user parameters
 turtles-own [
-  videos-viewed
-  my-sharing-likelihood
-  number-of-times-shared
-  is_recommending?
-  previous-recommender
+  videos-viewed          ;; A dynamic list variable, containing id’s of the content/video viewed by the user
+  my-sharing-likelihood  ;; A static variable which represents the sharing likelihood of a user, for the content/videos
+  number-of-times-shared ;; A dynamic variable, representing the number of times any content/video has been shared by this user
+  is_recommending?       ;; A dynamic variable, representing if the user is open to share any content or not
+  previous-recommender   ;; A dynamic variable, representing the user(turtle) who immediately recommended some content to a other user.
 ]
-
-links-own[ connection-strength ]
-
+;; connection parameters
+links-own[ connection-strength ] ;; variable representing connection strength between two links
+;; environment parameters
 patches-own [
-  video-type
-  video-id
-  number-of-times-viewed
-  social-motivation-index
+  video-type              ;; A static variable, representing the type of the video/content
+  video-id                ;; A static varaible, contaning the id of the video/content. Each video has a unique id assigned to it.
+  number-of-times-viewed  ;; A static variable, representing the number of times the content on this patch is viewed by the user.
+  social-motivation-index ;; A static list where each value of the list ranges from 1 to 5 and represents the social-emotion-index of a content/video
 ]
-
+;; setup procedure
 to setup
-  clear-all
-  create-network
-  set-parameters
-  create-content
-  reset-ticks
+  clear-all      ;; clearing plots and simulation window
+  create-network ;; setting up the network and social graph
+  set-parameters ;; setting up the global parameters
+  create-content ;; setting up the environment and creating video on each patch
+  reset-ticks    ;; resetting the ticks after set up
 end
-
+;; procedure for setting up global variables
 to set-parameters
    set total-times-shared 1
-   set sharing-rates [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-   set video-sharing-likelihood [42.3 38.8 31.7 29.5 28.8 28.4 28.1 26.7 23.8 20.0 19.7 15.6 15.3 14.0 12.8 9.8]
-   set social-motivation-types ["opinion-seeking" "shared-passion" "social-utility" "kudos" "zeitgeist" "social-good" "reaction-seeking" "self-expression" "emotional-experience"]
+   set sharing-rates [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]    ;; sharing rate for each video type is initialized to zero
+   set video-sharing-likelihood [42.3 38.8 31.7 29.5 28.8 28.4 28.1 26.7 23.8 20.0 19.7 15.6 15.3 14.0 12.8 9.8] ;; likelyhood for 16 video types as given in Butox paper
+   set social-motivation-types ["zeitgeist" "opinion-seeking" "experience" "perseverence" "kudos" "social-welfare" "reaction" "expression" "utility"] ;; types of social motivation
 end
-
+;; Procedure to create videos or setup the environment
 to create-content
-  (foreach (sort patches ) (n-values count patches [t -> t])[ [x y] -> ask x [set video-id y] ])
-  ask patches [ create-one-video]
-  divide-world
+  (foreach (sort patches ) (n-values count patches [t -> t])[ [x y] -> ask x [set video-id y] ]) ;; assigning each video a unique video id reference "https://stackoverflow.com/questions/30055169/netlogo-how-to-give-each-patch-an-unique-identity-plabel-name"
+  ask patches [ create-one-video] ;; ask each patch to create video and set the videos social motivation index, and set the type of the video
+  divide-world ;; divide the world into 16 parts according to video types, color them and show the video type in the background of the model interface.
 end
-
+;; procedure to create a new video at a patch
 to create-one-video
-  set social-motivation-index ( list  (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) )
-  set number-of-times-viewed 0
-  set-video-type
+  set social-motivation-index ( list  (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) (random 5 + 1) ) ;; randomly assign social motivation values for each type
+  set number-of-times-viewed 0 ;; set the number of views of this video to be zero
+  set-video-type               ;; set the video type depending on the location of the patch
 end
-
+;; procedure to set the video type depending on the location of the patch it is called from
 to set-video-type
-if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 1 ]
+  ;; dividing into 16 parts and assigning each part a type, which can even be seen in the background of the model interface
+  if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 1 ]
   if pxcor <= -8 and pxcor >= -16 and pycor <= 8 and pycor >= 0 [ set video-type 2 ]
   if pxcor <= 0 and pxcor >= -8 and pycor <= 16 and pycor >= 8 [ set video-type 3 ]
   if pxcor <= -8 and pxcor >= -16 and pycor <= 0 and pycor >= -8 [ set video-type 5 ]
@@ -69,111 +70,109 @@ if pxcor <= -8 and pxcor >= -16 and pycor <= 16 and pycor >= 8 [ set video-type 
   if pxcor <= 16 and pxcor >= 8 and pycor <= 0 and pycor >= -8 [ set video-type 15 ]
   if pxcor <= 16 and pxcor >= 8 and pycor <= -8 and pycor >= -16 [ set video-type 16 ]
 end
-
+;; function to divide the world visually on model interface
 to divide-world
-  ask patches [
+  ask patches [ ;; ask all the patches to set their label to their video type  and their color accordingly
     set pcolor black
     set plabel-color 6 + video-type * 10
     set plabel video-type
   ]
 end
-
+;; procedure to setup the network
 to create-network
-  if social-graph-type = "random" [  nw:generate-random turtles links number-of-users 0.1 ]
-  if social-graph-type = "preferential" [ nw:generate-preferential-attachment turtles links number-of-users 1 ]
-  if social-graph-type = "smallworld" [ let sq sqrt number-of-users nw:generate-small-world turtles links sq sq 2.0 false ]
-  setup-links
-  ask turtles [
+  if social-graph-type = "random" [  nw:generate-random turtles links number-of-users 0.1 ]                                    ;; random network with 10 % chance of being connected
+  if social-graph-type = "preferential" [ nw:generate-preferential-attachment turtles links number-of-users 1 ]                ;; preferential network
+  if social-graph-type = "smallworld" [ let sq sqrt number-of-users nw:generate-small-world turtles links sq sq 2.0 false ]    ;; small world network
+  setup-links                                                                                                                  ;; setup the connection links and initialize their strength to 1
+  ask turtles [                                                                                                                ;; create users/ turtles
     set shape "person"
     set color cyan + 3
-    setxy random-xcor random-ycor
+    setxy random-xcor random-ycor               ;; randomly position the turtle on the map, this represents default recommendations by social platform (say youtube)
     set videos-viewed []
-    set my-sharing-likelihood random 100 / 100
-    set previous-recommender nobody
-    set is_recommending? false
+    set my-sharing-likelihood random 100 / 100  ;; setting sharing likelihood to be random float between 0 and 1
+    set previous-recommender nobody             ;; setting previous-recommender to nobody as no one has shared any content to any one
+    set is_recommending? false                  ;; since this user is currently not sharing, set is_recommending to false
   ]
 end
-
-
+;; procedure to setup the network links
 to setup-links
   ask links [
-    set connection-strength 1
+    set connection-strength 1     ;; default connection strength is 1
     set label connection-strength
   ]
 end
-
+;; the go procedure
 to go
+                                                                ;; asks turtles to view a video and then try to watch a new video at each time step
   ask turtles  [
-    view
-    see-new-video
+    view                                                        ;; ask turtles to view
+    see-new-video                                               ;; ask turtles to watch new vdeo
   ]
-  if( ticks != 0 and ticks mod video-removal-rate = 0 ) [
+  if( ticks != 0 and ticks mod video-removal-rate = 0 ) [       ;; decide to remove videos every video-removal-rate time steps
     decide-to-remove
   ]
-  if( ticks > 3100) [stop]
+  if( ticks > 3100) [stop]                                      ;; run for 31 days
   tick
 end
-
+;; procedure to remove videos
 to decide-to-remove
-
-  let to-delete []
-  ask patches [
-    if random-float 1 < video-removal-probability [
-      set to-delete lput video-id to-delete
-      create-one-video
+  let to-delete []                                      ;; list to store the ids of the removed video
+  ask patches [                                         ;; for all the videos
+    if random-float 1 < video-removal-probability [     ;; with a probability video-removal-probability, remove the video
+      set to-delete lput video-id to-delete             ;; if the video is removed, set the id of the video in the to-delete list for later processing
+      create-one-video                                  ;; create a new video in place of the previous video
     ]
   ]
-  foreach to-delete [
+  foreach to-delete [                                   ;; for each deleted video
       t ->
-      ask turtles [
-        if member? t videos-viewed [
-          set videos-viewed remove t videos-viewed
+      ask turtles [                                     ;; ask all the users
+        if member? t videos-viewed [                    ;; if this video-id is present in their viewed list
+          set videos-viewed remove t videos-viewed      ;; if so remove it from their viewed list
         ]
       ]
     ]
 end
-
+;; procedure to watch a new video
 to see-new-video
-  let people-recommending my-links with  [[ is_recommending?] of other-end]
-  if( any? people-recommending) [
-    set previous-recommender [other-end] of max-one-of people-recommending [connection-strength]
-    move-to [patch-here] of previous-recommender
+  let people-recommending my-links with  [[ is_recommending?] of other-end]                        ;; Finding all the connection of current user, who are willing to share video/content
+  if( any? people-recommending) [                                                                  ;; if any of the link is recommending for the current user
+    set previous-recommender [other-end] of max-one-of people-recommending [connection-strength]   ;; select the one with maximum link strength and set it as a previous recommender
+    move-to [patch-here] of previous-recommender                                                   ;; teleport to the video that is shared by the connection user
   ]
 end
-
+;; view procedure
 to view
-  set is_recommending? false
+  set is_recommending? false                                               ;; not sharing as of now
   let current-patch patch-here
-  let current-video [video-id] of current-patch
-  ifelse random-float 1 < 0.5 and member? current-video videos-viewed[
-    rt random 360
+  let current-video [video-id] of current-patch                            ;; get the video
+  ifelse random-float 1 < 0.5 and member? current-video videos-viewed[     ;; if this video is not already watched by the current user, then with 50 % probability
+    rt random 360                                                          ;; move in any random direction 1 step
     fd 1
   ]
   [
-    set videos-viewed lput current-video videos-viewed
+    set videos-viewed lput current-video videos-viewed                     ;; else watch the video again
     ask current-patch [
-      set number-of-times-viewed number-of-times-viewed + 1
+      set number-of-times-viewed number-of-times-viewed + 1                ;; update the watch count of the watched video
     ]
 
-    decide-to-share-or-not
+    decide-to-share-or-not                                                 ;; decide to share or not
 
   ]
 end
-
+;; procedure for sharing of videos
 to decide-to-share-or-not
   let current-patch patch-here
-  let current-video-sharing-likelihood ( item (video-type - 1) video-sharing-likelihood ) / 100
-  let motivation-to-share [mean social-motivation-index] of current-patch / 5
+  let current-video-sharing-likelihood ( item (video-type - 1) video-sharing-likelihood ) / 100               ;; getting the sharing likelihood of video on this patch
+  let motivation-to-share [mean social-motivation-index] of current-patch / 5                                 ;; getting mean of social motivation index, and normalizing it by dividing by 5 as it can be between 1 to 5
 
-  if my-sharing-likelihood * current-video-sharing-likelihood * motivation-to-share > random-float 1 [
-    set is_recommending? true
-    set total-times-shared total-times-shared + 1
-    set number-of-times-shared number-of-times-shared + 1
-    set sharing-rates replace-item (video-type - 1) sharing-rates ( item  (video-type - 1) sharing-rates + 1)
-
-    if (previous-recommender != nobody ) [
-      ask link-with previous-recommender [
-        set connection-strength connection-strength + 1
+  if my-sharing-likelihood * current-video-sharing-likelihood * motivation-to-share > random-float 1 [        ;; with probability my-sharing-likelihood * current-video-sharing-likelihood * motivation-to-share, share the video
+    set is_recommending? true                                                                                 ;; since the user is sharing, set its is_recommending to true
+    set total-times-shared total-times-shared + 1                                                             ;; increment the total times shared count
+    set number-of-times-shared number-of-times-shared + 1                                                     ;; increment the number of times this video has been shared
+    set sharing-rates replace-item (video-type - 1) sharing-rates ( item  (video-type - 1) sharing-rates + 1) ;; Change the sharing rate of this video
+    if (previous-recommender != nobody ) [                                                                    ;; if there was a user who recommended this video to the current user
+      ask link-with previous-recommender [                                                                    ;; ask the link between them
+        set connection-strength connection-strength + 1                                                       ;; to increase its strength by 1
         set label connection-strength
       ]
     ]
@@ -439,13 +438,15 @@ This model is designed to explore the spread of viral content on social media vi
 
 * What kind of social network graph has what kind of effect on the sharing and virality of a video? 
 
+* Which model is the real world social graph closest to? 
+
 * What social factors and other factors contribute to a content or a video going viral?
 
-* what pushes people to share and watch the content? 
+* what pushes people to share, watch the content? 
 
 * What interactions between content and user compels the users to watch the it? 
 
-The model assumes that the strength of connectivity or trust between users is increased as they succesfully shares content among them. The model is based on real-world phenomenons, and thus, I try try to recreate the patterns of content-sharing and content-viewing found in the real world social media networks. These patterns will surely show some emergent patterns as well, allowing us to comment on various parameters which generated such patterns.  
+The model assumes that the strength of connectivity or trust between users is increased as they succesfully shares content among them. The model is based on real-world phenomenons, and thus, this model try to recreate the patterns of content-sharing and content-viewing found in the real world social media networks. These patterns will surely show some emergent patterns as well, allowing us to comment on various parameters which generated such patterns.  
 
 ## 2. Entities, State Variables, and Scales
 
@@ -453,22 +454,40 @@ There are three kind of entities: The turtles which represents the users on soci
 
 The patches make up a square grid landscape of 33 x 33 patches with no wrapping around the edges and each patch has the following state variables: 
 
-* video-type: A static variable, representing the type of the video/content
+* video-type: A static variable, representing the type of the video/content. There are only 16 different video types, which are defined as follows:  
+	* type 1: Pets and Animals
+	* type 2: Nonprofits & Activism
+	* type 3: News & politics
+	* type 4: Travel & Events
+	* type 5: Education
+	* type 6: Science and Technology
+	* type 7: Sports
+	* type 8: People & Blogs
+	* type 9: Autos & Vehicles
+	* type 10: Comedy
+	* type 11: Howto & style
+	* type 12: Entertainment
+	* type 13: Gadgets & Games
+	* type 14 Film & Animation 
+	* type 15: Music
+	* type 16: Shows
 
-* video-id: A static varaible, contaning the id of the video/content
+Each video type has a sharing likelihood value, which is in accordance with the Butox paper, cited in the references section. More on the sharing likelihood in initialization section. 
+
+* video-id: A static varaible, contaning the id of the video/content. Each video has a unique id assigned to it. 
 
 * number-of-times-viewed: A static variable, representing the number of times the content on this patch is viewed by the user. 
 
-* social-motivation-index: A static list where each value of the list ranges from 1 to 6 and represents the social-emotion-index of a content/video. The social emotions are are of the following type (in order list entries): 
+* social-motivation-index: A static list where each value of the list ranges from 1 to 5 and represents the social-emotion-index of a content/video. The social emotions are are of the following type (in order list entries): 
+	* zeitgeist 
 	* opinion-seeking
-	* shared-passion 
-	* social-utility 
+	* experience
+	* perseverence
 	* kudos
-	* zeitgeist
- 	* social-good
-	* reaction-seeking
-	* self-expression
-	* emotional-experience
+ 	* social-welfare
+	* reaction
+	* expression
+	* utility
 
 Each turtle represents a user on social media and turtle has the following state variables: 
 
@@ -480,42 +499,43 @@ Each turtle represents a user on social media and turtle has the following state
 
 * is_recommending? : A dynamic variable, representing if the user is open to share any content or not
 
-* previous-recommender: A dynamic variable, representing the user(turtle) who immediately recommended some content to this user 
+* previous-recommender: A dynamic variable, representing the user(turtle) who immediately recommended some content to this user. It will be used to increase the trust between these users, by increasing the link strength. 
 
 The network is formed by undirected links from one turtle to other turtle. Each link has a state variable "connection-strength", which represents the strength of connection between 2 users. 
  
-Here, one time step isn't a defined value, but on comparing the patterns with the literature, we can assume that 100 ticks represents a day, and the model runs for around 31 days. 
+Here, one time step isn't a defined value, but upon parameter calibration and comparing the patterns with the literature, it is found that 100 ticks represents a day, and the model runs for around 31 days or a month. 
 
 ## 3. Process Overview and Scheduling
-The model includes the following actions that are executed in this order each time step.
+The model includes the following actions that are executed in this order at each time step.
 
 **View :** The user tries to view video at the location he is on ( the video on the patch the user is), if it has not already viewed the same video or randomly watches the video  again with a probabilty of 50%. Now, if the user watches the video, then it decides if it wants to share this video or not. 
 
-	* **Deciding to share or not :**  Now for deciding if the user wants to share the video or not, the user evaluates the mean of the social-indexes of the video, and multiplies it with his likelihood of sharing the video, and the likelyhood of this video being shared. If this video is shared, then the connection strength between the user who suggested this video to this user is increased. 
+	* **Deciding to share or not :**  Now for deciding if the user wants to share the video or not, the user evaluates the mean of the social-indexes of the video, and multiplies it with his likelihood of sharing the video, and the likelyhood of this video being shared and shares it with a random probabilty. If this video is shared, then the connection strength between the user who suggested this video to this user(previous-recommender) is increased by 1. 
 
-However, if the user has already viewed the current-video (video represented by the patch on which user is present currently) then it randomly tries to reach some other content which he can watch. Here this process is done via moving the user in some random direction on some other patch, as each patch is a different video. 
+However, if the user has already viewed the current-video (video represented by the patch on which user is present currently) then it randomly tries to reach some other content . This process is done via moving the user in some random direction on some other patch, as each patch is a different video. 
 
-**Watch New Video :**  After viewing step, the user tries to watch a new video. To watch a new video, a user checks if there are any connections of it who are trying to share/recommend some video. If so, outof of all those users, it selects the user which it trusts the most (here trust is represented by connection strength). Upon finding such a user, this user moves to the location where the video recommended by the sharer user is (this process is done by teleporting this user to the patch location of the sharer user). 
+**Watch New Video :**  After viewing step, the user tries to watch a new video. To watch a new video, a user checks if there are any connections of it who are trying to share/recommend some video. If so, out of of all those users, it selects the user which it trusts the most (here trust is represented by connection(link) strength). Upon finding such a user, this user moves to the location where the video recommended by the sharer user is (this process is done by teleporting this user to the patch location of the sharer user). And the previous-recommender of the user who teleported is set to the user who shared the video. 
 
-**Decide to remove :** After some regular interval of time (decided by the slider video-removal-rate) there is a chance that the video will be removed, and in place of this video, a new video will be added at the place of removed video. The chance of deletion is also decided by a slider called video-removal-probablity. The process of creating a new video is covered in initialization part. 
+**Decide to remove :** After some regular interval of time (decided by the slider video-removal-rate) there is a chance that a video will be removed, and in place of deleted video, a new video will be added of the same type. The chance of deletion is also decided by a slider called video-removal-probablity. The process of creating a new video is covered in initialization part. 
+When a video is removed, it is also removed from any place it was associated with. For example, from the viewed history of a user, or the number of times shared is decreased by the sharing count of deleted video.   
 
 ## 4. Design Concepts
 
-* **Basic Principles :** The model is based on the basic theory of information diffusion and virality. The users interact with each other and perform actions based on their interaction with other users as well as the environment. The purpose of this model is to study the variation of number of views depending on the type of the content and their likelihoods. 
+* **Basic Principles :** The model is based on the basic theory of information diffusion and virality. The users interact with each other and perform actions based on their interaction with other users as well as the environment(patches). The purpose of this model is to study the variation of number of views, rates of sharing, etc depending on the type of the content and their likelihoods. 
 
-* **Emergence :** There is an emergence of the number of content views distribution and their sharing rates depending on the type of video, and the social graph. The agents or the users simply interact with their environment and with other agents or users, and the out come is the emergent behavoious of these interactions. 
+* **Emergence :** There is an emergence of the number of content views distribution and their sharing rates depending on the type of video, and the social graph. The agents or the users simply interact with their environment and with other agents or users, and the out come is the emergent behavoious of these interactions. This emegrent behaviour is in accordance with the literature. 
 
-* **Adaptation :**  The adaptive behavious of the users is to recommend content to other users and depending on the strength/ trust of their connection watch the content recommended by other users. At each time step, a user can decide if it wants to share some content to its connections or not. Also, it trie to watch a new video which has been recommended or shared by one of his connections, or to watch a old video. 
+* **Adaptation :**  The adaptive behavious of the users is to recommend content to other users and depending on the strength/ trust of their connection watch the content recommended by other users. At each time step, a user can decide if it wants to share some content to its connections or not. Also, it tries to watch a new video which has been recommended or shared by one of his connections, or to watch a old video. The agents depending on their interaction with a specific agent/user, increases their connection strength, which in turn helps it to see the best content (on an individual basis) based on recommendation by its connections.
 
-* **Objective :** The goal or objective of a user is to maximize the worth of content watched by time spent. Thus a user will always try to see a content which is recommended by some one who it trusts the most, and who has social traits similar to it. This, when there are a lot of connection users recommending content to a user, then the target user always choses the user with the highest trust value or the highest connection strength value, and thus maximizing their pleasure per unit time, by viewing content that suits him/her the most. 
+* **Objective :** The goal or objective of a user is to maximize the worth of content watched per time spent. Thus a user will always try to see a content which is recommended by some one who it trusts the most, and who has social traits similar to it. Thus, when there are a lot of connection users recommending content to a user, then the target user always choses the user with the highest trust value or the highest connection strength value, and thus maximizing their pleasure per unit time, by viewing content that suits him/her the most. 
 
-* **Learning :** There is no as such learning in the model, however the agents depending on their interaction with a specific agent/user, increases their connection strength, which in turn helps it to see the best content (on an individual basis) based on recommendation by its connections. 
+* **Learning :** There is no as such learning in the model.  
 
 * **Prediction :** The model predicts the rate of sharing of content and average view of of different types of content. 
  
 * **Sensing :**  The agents are assumed to know the agent who previously recommnended the conent it is watching, without error. Also, all the agents are assumed to know the connections strengths between their link neighbors without error . 
 
-* **Interaction :**  Agents interact with the patches, and they can share the content at the current patch, and they can view the content at the current patch location. Also, the patches interact with themselves, where they can increase the connection strength between their link neighbors upon watching a recommended content by some link neighbor. 
+* **Interaction :**  Agents interact with the patches, and they can share the content at the current patch, and they can view the content at the current patch location. Also, the agents interact with themselves, where they can increase the connection strength between their link neighbors upon watching a recommended content by some link neighbor. 
 
 * **Stochasticity :** The user social graph setup initally can also be chosen to be a random graph, which is set up stocastically. The setting up of a content's social parameters are set up randomly and thus are stocastic. The deletion of videos on every fixed interval of time is also stocastically done. After deletion, new videos are created to fill the place of the removed video. The social parameters for the videos are again set stocastically. 
 The user agents are placed randomly on the world, and their sharing likelihood is choosen stocastically. The method to watch the video also has randomness in it as explained in section 3, and also the movement of turtles is done randomly. 
@@ -531,20 +551,20 @@ The sharing rates line chart gives the sharing rates of different type of conten
 
 Firstly a network is setup depending on the type of network selected and the links are setup. The connection-strength of each link is initialized to 1. 
 
-Then turtles/users are created in the network. Their viewed list is set to empty ([]), their previous-recommender is set to nobody, their is_recommending? variable is set to false, their sharing likelihood is set to some random float between 0 and 1. 
+Then turtles/users are created in the network. Their viewed list is set to empty ( [ ] ), their previous-recommender is set to nobody, their is_recommending? variable is set to false, their sharing likelihood is set to some random float between 0 and 1. 
 Next the global variables are setup, namely 
 
 * total-times-shared which is initialized to 1
 
 * sharing-rates which is initialized to [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
-* video-sharing-likelihood which is set to [42.3 38.8 31.7 29.5 28.8 28.4 28.1 26.7 23.8 20.0 19.7 15.6 15.3 14.0 12.8 9.8] depending on the Butox paper
+* video-sharing-likelihood which is set to [42.3 38.8 31.7 29.5 28.8 28.4 28.1 26.7 23.8 20.0 19.7 15.6 15.3 14.0 12.8 9.8] depending on the Butox paper, for the 16 video types in order mentioned in section 2.
 
-* The social-motivation-types are set to ["opinion-seeking" "shared-passion" "social-utility" "kudos" "zeitgeist" "social-good" "reaction-seeking" "self-expression" "emotional-experience"] depending on research of Phil Nottingham. 
+* The social-motivation-types are set to ["zeitgeist" "opinion-seeking" "experience" "perseverence"  "kudos"  "social-welfare" "reaction" "expression" "utility"] depending on research of Phil Nottingham. 
 
 After this step, the world is setup and the content is created. Each patch represents a video, and therefore, a unique ID is created for each patch where numbers from 1 to number-of-patches are assigned uniquely to each patch. 
 
-The world is divied into 16 parts, each part representing a specific type of video (from Butox Paper). Now, a new video is created for each patch. To do so, the video-id of video is set depending on the location of the patch (into one of the 16 types defined above). The social-motivation-index for each video is initialized to a random list of numbers, the number-of-times-viewed state variable is initialized to 0. 
+The world is divied into 16 parts, each part representing a specific type of video (from Butox Paper). Now, a new video is created for each patch. To do so, the video-id of video is set depending on the location of the patch (into one of the 16 types defined above). The social-motivation-index for each video is initialized to a random list of numbers, the number-of-times-viewed state variable is initialized to 0. Note, in the model interface, each of the 16 parts will have a number in the background with a different color indicating the type of the video present at that location.
 
 Initialization is always the same, except the likelyhoods that are begin initialized randomly. 
 
@@ -564,7 +584,7 @@ The model has no input data.
 
 * Tom Broxton, Yannet Interian, Jon Vaver, and Mirjam Wattenhofer. Catching a viral video. In ICDM'10 Workshop, pages 241--259, Los Alamitos, CA, USA, 2010. IEEE Computer Society.
 
-* 
+* Phil Nottingham. Building a Social Video Strategy- WistiaFest 2015 
 @#$#@#$#@
 default
 true
