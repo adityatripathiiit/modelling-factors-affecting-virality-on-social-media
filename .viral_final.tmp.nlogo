@@ -228,7 +228,7 @@ CHOOSER
 social-graph-type
 social-graph-type
 "preferential" "smallworld" "random"
-0
+2
 
 BUTTON
 22
@@ -256,7 +256,7 @@ video-removal-rate
 video-removal-rate
 50
 500
-344.0
+300.0
 1
 1
 ticks
@@ -581,7 +581,7 @@ Next the global variables are setup, namely
 
 After this step, the world is setup and the content is created. Each patch represents a video, and therefore, a unique ID is created for each patch where numbers from 1 to number-of-patches are assigned uniquely to each patch. 
 
-The world is divided into 16 parts, each part representing a specific type of video (from Broxton Paper). Now, a new video is created for each patch. To do so, the video-type of video is set depending on the location of the patch (into one of the 16 types defined above). The social-motivation-index for each video is initialized to a random list of numbers, the number-of-times-viewed state variable is initialized to 0. Note, in the model interface, each of the 16 parts will have a number in the background with a different color indicating the type of the video present at that location.
+The world is divided into 16 parts, each part representing a specific type of video (from Broxton Paper). Now, a new video is created for each patch. To do so, the video-i of video is set depending on the location of the patch (into one of the 16 types defined above). The social-motivation-index for each video is initialized to a random list of numbers, the number-of-times-viewed state variable is initialized to 0. Note, in the model interface, each of the 16 parts will have a number in the background with a different color indicating the type of the video present at that location.
 
 Initialization is always the same, except the likelyhoods that are begin initialized randomly. 
 
