@@ -8,7 +8,7 @@ methods of diffusion of information, and try to answer question like:
 - Which model is the real world social graph closest to? 
 - What factors (social and non-social) contribute to a virality of content/video? what pushes people to share watch the content? 
 - What interactions between content and user compels the users to watch the it? etc.
-- 
+
 The model is based on real-world phenomenons found in the real world social media networks.We try to find the viewership and sharing patterns of different type of videos, and compare them with the pre-existing results found in the real world social media networks. These patterns show emergent patterns as well, allowing us to comment on various parameters which generated such patterns.
 
 Refer [here](./files/Viral_Content_Presentation.pdf) for **Project presentation** of the model.
